@@ -14,7 +14,7 @@ CFLAGS := -idirafter $(VITASDK)/arm-vita-eabi/include -I../loader -I. \
           -Wall -Wextra -Wno-unused-parameter -Wno-unused-function -g -O1
 LDFLAGS := -pthread
 
-TESTS := test_budget test_revisit test_regress test_no_backing_store test_vertex_cache test_concurrency test_prologue
+TESTS := test_budget test_revisit test_regress test_no_backing_store test_vertex_cache test_concurrency test_prologue test_open_memo
 FAKES := fake_vitagl.c fake_vita_os.c
 
 .PHONY: all check clean
@@ -31,6 +31,12 @@ $(OUT)/test_vertex_cache: test_vertex_cache.c fake_vertex_env.h ../loader/vertex
 $(OUT)/test_prologue: test_prologue.c ../loader/prologue.c ../loader/prologue.h
 	@mkdir -p $(OUT)
 	$(CC) $(CFLAGS) $< -o $@
+
+# The open memo stands alone as well: it brings its own filesystem, so every
+# answer it gives can be checked against what the card would have said.
+$(OUT)/test_open_memo: test_open_memo.c ../loader/open_memo.c ../loader/open_memo.h
+	@mkdir -p $(OUT)
+	$(CC) $(CFLAGS) $< $(LDFLAGS) -o $@
 
 $(OUT)/%: %.c $(FAKES) harness.h fake_vitagl.h ../loader/texture_cache.c ../loader/config.h
 	@mkdir -p $(OUT)

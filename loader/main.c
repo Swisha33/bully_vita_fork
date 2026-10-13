@@ -53,6 +53,7 @@
 
 #include "streaming_patch.h"
 #include "io_census.h"
+#include "open_memo.h"
 #include "frame_profile.h"
 #include "texture_cache.h"
 #include "vertex_cache.h"
@@ -334,6 +335,7 @@ static void memory_heartbeat(void) {
 
   frame_profile_report();
   io_census_report();
+  open_memo_report();
   thread_report(span_us);
 }
 
@@ -720,6 +722,11 @@ static FILE *stdin_fake;
 // took thirteen seconds is only half an answer without knowing how much of it
 // was spent waiting on the card.
 static FILE *counted_fopen(const char *filename, const char *mode) {
+  // A repeat probe for a file already proven missing never reaches the card,
+  // and is not counted as an open: nothing was opened. open_memo has its own
+  // line in the heartbeat for how many of these there were.
+  if (open_memo_before_open(filename, mode))
+    return NULL;
   // Timed, not just counted. An open and a read are different costs on this
   // card -- an earlier round measured a first open at 3.49 ms against 1.18 ms
   // of latency for a read -- and the area load does roughly one open per read,
@@ -730,6 +737,9 @@ static FILE *counted_fopen(const char *filename, const char *mode) {
   // of one archive from a thousand opens of a thousand files, and those want
   // opposite fixes. Same figure the profiler just took; no third clock read.
   io_census_open(filename, frame_profile_io_open(t0));
+  // After the census has its figure, so the stat that proves a missing file
+  // missing is never charged to the open it follows.
+  open_memo_record(filename, mode, f != NULL);
   return f;
 }
 
@@ -1110,6 +1120,10 @@ int main(int argc, char *argv[]) {
 
   track_thread(sceKernelGetThreadId(), "frame");
   io_census_init();
+  open_memo_init(file_exists(OPEN_MEMO_ENABLE_PATH));
+  traceLog("open memo: %s\n", file_exists(OPEN_MEMO_ENABLE_PATH)
+           ? "on -- repeat probes for missing files are answered without the card"
+           : "off (create ux0:data/Bully/open_memo to turn it on)");
   core_layout_fixed = !file_exists(CORE_LAYOUT_DISABLE_PATH);
   traceLog("threads: %s -- frame core 2, game core %d, render core %d, "
            "streaming core %d, display queue core 0 (fixed)\n",

@@ -191,6 +191,11 @@
 // to carry that risk: create this file to ask for the measurement.
 #define FRAME_PROFILE_PATH DATA_PATH "/" "frame_profile"
 
+// Opt IN while it is being measured. With this file present, a read-only open
+// of a path already proven missing fails at once instead of asking the card
+// again. See open_memo.c for what proves a path missing and what forgets it.
+#define OPEN_MEMO_ENABLE_PATH DATA_PATH "/" "open_memo"
+
 // How long a vertex buffer must go unlocked before the loader takes back the
 // CPU-side copy of its data. The game keeps that copy for the life of the
 // buffer so it can be locked again without reading back from the GPU, which is

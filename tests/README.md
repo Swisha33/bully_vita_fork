@@ -30,6 +30,7 @@ genuinely exercised rather than mocked away.
 | `test_revisit` | leaving an area and coming back restores its textures; before the backing store existed, 128 of 200 came back white |
 | `test_regress` | the specific mistakes already made once: `VGL_MEM_ALL`, cube maps tracked as flat textures, uploads the driver rejected being accounted, the cache file never reclaiming space, a failed restore leaving freed memory bound |
 | `test_no_backing_store` | when nothing can be copied, textures are held rather than lost, until memory genuinely has to be bounded |
+| `test_open_memo` | the open memo never answers "missing" for a file that is there: unproven failures are not remembered, a write forgets the path before and after, a proof overtaken by a write is dropped, and eight threads of reads and saves get no wrong answer |
 
 The suites are checked by mutation: reintroducing any of the bugs above makes at
 least one of them fail. If you change the cache, break it on purpose once and

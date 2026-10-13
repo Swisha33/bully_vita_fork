@@ -51,6 +51,7 @@ add_executable(Bully
   loader/main.c
   loader/streaming_patch.c
   loader/io_census.c
+  loader/open_memo.c
   loader/frame_profile.c
   loader/prologue.c
   loader/texture_cache.c
